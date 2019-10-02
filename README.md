@@ -1,5 +1,6 @@
 # Hands on materials for Nanopore data analysis: from basecalling to structural variant detection
 
+## 0. Preliminary
 To use Shirokanedai HPC, we have the following two modes:
 * Interactive mode
 ```
@@ -30,36 +31,44 @@ qsub -l os7,s_vmem=16G,mem_req=16G SCRIPT-NAME.sh
 ```
 
 
-## Nanopore data analysis enviroment setup
-1. Get into the interactive mode
+## 1.  Nanopore data analysis enviroment setup
+1.1 Get into the interactive mode
 ```
 qlogin -l os7,s_vmem=16G,mem_req=16G
 ```
 
-2. Build singularity images with pre-prepared docker file
+1.2. Build singularity images with pre-prepared docker file
 ```
 singularity build --sandbox <YOUR-IMAGE-NAME> docker://yaozhong/ont_taiyaki:0.1
 ```
 
-3. Get into the singularity image
+1.3. Get into the singularity image
 ```
 singularity shell --writable <YOUR-IMAGE-NAME>
 # if GPU is intended to use, please first specify qlogin v100 option, and using the --nv option like
 singularity shell --nv --writable <YOUR-IMAGE-NAME>
 ```
 
-4. Example data and configuration files
+1.4. Example data and configuration files
 We provide 100 reads of raw fast5 signals in the data fold.
 Configurations used in guppy is also places there.
 
 
-## Base-calling
+## 2. Base-calling
+
+```
+READS_FOLD=
+BASECALL_OUTPUT=
+MODEL=
+CFG=data/guppy.config
+
+guppy_basecaller -i $READS_FOLD -s $BASECALL_OUTPUT --chunk_size 300 -c $CFG -m $MODEL --device cuda:0
+```
+
+## 3. Assembly
 
 
-## Assembly
-
-
-## Structural variant detection
+## 4. Structural variant detection
 
 
 
