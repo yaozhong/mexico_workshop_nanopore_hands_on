@@ -47,3 +47,21 @@ singularity shell --writable <YOUR-IMAGE-NAME>
 # if GPU is intended to use, please first specify qlogin v100 option, and using the --nv option like
 singularity shell --nv --writable <YOUR-IMAGE-NAME>
 ```
+
+4. Example data and configuration files
+We provide 100 reads of raw fast5 signals in the data fold.
+Configurations used in guppy is also places there.
+
+
+## Base-calling
+
+
+## Assembly
+
+
+## Structural variant detection
+
+
+
+
+
