@@ -88,23 +88,43 @@ Find the overlaps between contigs
 minimap2 $ASM_Folder/$ASM_Prefix.contigs.fasta $READS > $ASM_Folder/$ASM_Prefix.contigs.paf
 ```
 
-3.4 Polishing
-Repeat the following steps 10 times to get more accurate long contigs
+3.4 Concensus correction (Polishing)
+- Correct contig erros 
+- Repeat the following steps 10 times to get more accurate long contigs
 ```
 minimap2 contigs.fasta $READS > contigs.paf
 racon $READS configs.paf contigs.fasta > contigs.fasta
 ```
 
 ```
-## 10 rounds of  polishing
-for j in {0..10}
+## 10 rounds of polishing
+for j in {1..10}
 do
+# read-contig mapping
 minimap2  ${out_file}consensus_${i}_${j}.fasta ${out_file}merge_${i}_par.fastq > ${out_file}map${i}_${j}.paf
+# consensus error correction
 racon ${out_file}merge_${i}_par.fastq ${out_file}map${i}_${j}.paf  ${out_file}consensus_${i}_${j}.fasta >  ${out_file}consensus_${i}_$((j+1)).fasta
 done
 ```
 
+Evluation of identity rate
+
 ## 4. Structural variant detection
+
+4.1 Alignment using NGMLR
+
+```
+ngmlr -x ont -t 8 -r ref.fa -q input.fastq -o output.sam
+```
+
+4.2 SV detection with Sniffies
+
+```
+./sniffles -m mapped.sort.bam -v output.vcf
+```
+
+
+
 
 
 
