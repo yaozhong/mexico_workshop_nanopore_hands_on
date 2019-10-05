@@ -1,4 +1,4 @@
-# Hands on materials for Nanopore data analysis: from basecalling to structural variant detection
+Hands on materials for Nanopore data analysis: from basecalling to structural variant detection
 
 ## 0. Preliminary
 To use Shirokanedai HPC, we have the following two modes:
@@ -39,7 +39,7 @@ qlogin -l os7,s_vmem=16G,mem_req=16G
 
 1.2. Build singularity images with pre-prepared docker file
 ```
-singularity build --sandbox <YOUR-IMAGE-NAME> docker://yaozhong/ont_taiyaki:0.1
+singularity build --sandbox <YOUR-IMAGE-NAME> docker://yaozhong/nanopore_analysis
 ```
 
 1.3. Get into the singularity image
@@ -57,13 +57,10 @@ Configurations used in guppy is also places there.
 ## 2. Base-calling
 
 ```
-READS_FOLD=
-BASECALL_OUTPUT=
-MODEL=
-CFG=data/guppy.config
+guppy_basecaller -i data/fast5/lambda/ -s output/basecalling/lambda -c /opt/ont/guppy/data/dna_r9.4.1_450bps_fast.cfg 
 
-guppy_basecaller -i $READS_FOLD -s $BASECALL_OUTPUT --chunk_size 300 -c $CFG -m $MODEL --device cuda:0
 ```
+For 4,000 lambda fast5 reads, it takes real 35m49.934s.
 
 ## 3. Assembly
 3.1 Read-read mapping
@@ -79,7 +76,7 @@ miniasm  -f merge_{i}_par.fastq reads_{i}.paf > raw_contigs_{i}.gfa
 - Miniasm is used to generate contigs
 - The mapping information between all reads (*.paf) is used to generate consensus contigs.
 ```
-miniasm -f $READS $ASM_Folder/$ASM_Prefix.paf > $ASM_Folder/$ASM_Prefix.gfa
+miniasm -f $READS_fastq $ASM_Folder/$ASM_Prefix.paf > $ASM_Folder/$ASM_Prefix.gfa
 
 # extract contig fastq file
 awk '$1 ~/S/ {print ">"$2"\n"$3}' $ASM_Folder/$ASM_Prefix.gfa > $ASM_prefix.contigs.fasta
@@ -88,15 +85,26 @@ awk '$1 ~/S/ {print ">"$2"\n"$3}' $ASM_Folder/$ASM_Prefix.gfa > $ASM_prefix.cont
 3.3 Read-Contig mapping
 Find the overlaps between contigs
 ```
-minimap2 $ASM_Folder/$ASM_Prefix.contigs.fasta > $ASM_Folder/$ASM_Prefix.contigs.paf
+minimap2 $ASM_Folder/$ASM_Prefix.contigs.fasta $READS > $ASM_Folder/$ASM_Prefix.contigs.paf
 
-RACON $INREADS $ASM_Folder/$ASM_Prefix.contigs.paf $ASM_Folder/$ASM_Prefix.config.fasta > #ASM_Folder/$ASM_Prefix.contigs.fasta
-
+racon $INREADS $ASM_Folder/$ASM_Prefix.contigs.paf $ASM_Folder/$ASM_Prefix.config.fasta > #ASM_Folder/$ASM_Prefix.contigs.fasta
 ```
 
 3.4 Polishing
+Repeat the following steps 10 times to get more accurate long contigs
+```
+minimap2 contigs.fasta $READS > contigs.paf
+racon $READS configs.paf contigs.fasta > contigs.fasta
+```
 
-
+```
+## 10 rounds of  polishing
+for j in {0..10}
+do
+minimap2  ${out_file}consensus_${i}_${j}.fasta ${out_file}merge_${i}_par.fastq > ${out_file}map${i}_${j}.paf
+racon ${out_file}merge_${i}_par.fastq ${out_file}map${i}_${j}.paf  ${out_file}consensus_${i}_${j}.fasta >  ${out_file}consensus_${i}_$((j+1)).fasta
+done
+```
 
 ## 4. Structural variant detection
 
