@@ -86,8 +86,6 @@ awk '$1 ~/S/ {print ">"$2"\n"$3}' $ASM_Folder/$ASM_Prefix.gfa > $ASM_prefix.cont
 Find the overlaps between contigs
 ```
 minimap2 $ASM_Folder/$ASM_Prefix.contigs.fasta $READS > $ASM_Folder/$ASM_Prefix.contigs.paf
-
-racon $INREADS $ASM_Folder/$ASM_Prefix.contigs.paf $ASM_Folder/$ASM_Prefix.config.fasta > #ASM_Folder/$ASM_Prefix.contigs.fasta
 ```
 
 3.4 Polishing
