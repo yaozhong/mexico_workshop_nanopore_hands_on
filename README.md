@@ -30,7 +30,6 @@ Submit your script file:
 qsub -l os7,s_vmem=16G,mem_req=16G SCRIPT-NAME.sh
 ```
 
-
 ## 1.  Nanopore data analysis enviroment setup
 1.1 Get into the interactive mode
 ```
@@ -57,59 +56,60 @@ Configurations used in guppy is also places there.
 ## 2. Base-calling
 
 ```
-guppy_basecaller -i data/fast5/lambda/ -s output/basecalling/lambda -c /opt/ont/guppy/data/dna_r9.4.1_450bps_fast.cfg 
-
+guppy_basecaller -i data/fast5/lambda -s output/basecall/lambda -c /opt/ont/guppy/data/dna_r9.4.1_450bps_fast.cfg --cpu_threads_per_caller 24 
 ```
-For 4,000 lambda fast5 reads, it takes real 35m49.934s.
+For 4,000 lambda fast5 reads, it takes real 2m 39.700s.
+
 
 ## 3. Assembly
 3.1 Read-read mapping
 Find overlaps between long reads
 ```
 # k: k-mer size, w: minmize winodw length 
-minimap2 -x ava-ont -k15 -w5 marge_${i}_par.fastq marge_${i}_par.fastq > reads_{i}.paf
-# generate contigs
-miniasm  -f merge_{i}_par.fastq reads_{i}.paf > raw_contigs_{i}.gfa
+minimap2 -x ava-ont -k15 -w5 YOUR-READS.fastq  YOUR-READS.fastq > YOUR-READS-OVERLAP.paf
 ```
 
 3.2 Contig Generation
 - Miniasm is used to generate contigs
 - The mapping information between all reads (*.paf) is used to generate consensus contigs.
 ```
-miniasm -f $READS_fastq $ASM_Folder/$ASM_Prefix.paf > $ASM_Folder/$ASM_Prefix.gfa
+# generate contigs
+miniasm  -f YOUR-READS.fastq  YOUR-READS-OVERLAP.paf > YOUR-CONTIGS.gfa
 
 # extract contig fastq file
-awk '$1 ~/S/ {print ">"$2"\n"$3}' $ASM_Folder/$ASM_Prefix.gfa > $ASM_prefix.contigs.fasta
+awk '$1 ~/S/ {print ">"$2"\n"$3}' YOUR-CONTIGS.gfa > YOUR-CONTIGS.fasta
 ```
 
 3.3 Read-Contig mapping
-Find the overlaps between contigs
+Find the overlaps between read and contigs
+(note no specific option is needed)
 ```
-minimap2 $ASM_Folder/$ASM_Prefix.contigs.fasta $READS > $ASM_Folder/$ASM_Prefix.contigs.paf
+minimap2 $READS contigs.fasta > read-contig.paf
 ```
 
 3.4 Concensus correction (Polishing)
 - Correct contig erros 
 - Repeat the following steps 10 times to get more accurate long contigs
 ```
-minimap2 contigs.fasta $READS > contigs.paf
-racon $READS configs.paf contigs.fasta > contigs.fasta
+minimap2  contigs.fasta YOUR-READS.fastq  > read-contig.paf
+racon YOUR-READS.fastq read-contig.paf contigs.fasta > contigs.fasta
 ```
 
 ```
 ## 10 rounds of polishing
-for j in {1..10}
+
+for i in `seq 1 10`
 do
-# read-contig mapping
-minimap2  ${out_file}consensus_${i}_${j}.fasta ${out_file}merge_${i}_par.fastq > ${out_file}map${i}_${j}.paf
-# consensus error correction
-racon ${out_file}merge_${i}_par.fastq ${out_file}map${i}_${j}.paf  ${out_file}consensus_${i}_${j}.fasta >  ${out_file}consensus_${i}_$((j+1)).fasta
+	minimap2  contigs_$((i-1)).fasta YOUR-READS.fastq  > read-contig_$((i-1)).paf
+	racon YOUR-READS.fastq read-contig_$((i-1)).paf contigs_$((i-1)).fasta > contigs_$((i)).fasta
 done
 ```
 
-Evluation of identity rate
+Now you get the assembly of genome from your reads.
+
 
 ## 4. Structural variant detection
+
 
 4.1 Alignment using NGMLR
 
