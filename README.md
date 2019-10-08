@@ -49,9 +49,20 @@ singularity shell --nv --writable <YOUR-IMAGE-NAME>
 ```
 
 1.4. Example data and configuration files
-We provide 100 reads of raw fast5 signals in the data fold.
-Configurations used in guppy is also places there.
+We provided
+* 4000 Lambda phage reads of raw fast5 signals in the fold of
+```
+~/nanopore/data/fast5/lambda
+```
+* 1000 reads from human chr11 in the fold of
+```
+~/nanopore/data/fast5/hs_chr20_1000
+```
 
+Reference files are listed in
+```
+~/nanopore/data/reference
+```
 
 ## 2. Base-calling
 
@@ -109,7 +120,6 @@ Now you get the assembly of genome from your reads.
 
 
 ## 4. Structural variant detection
-
 
 
 4.1 Alignment using NGMLR
