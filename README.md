@@ -111,17 +111,24 @@ Now you get the assembly of genome from your reads.
 ## 4. Structural variant detection
 
 
+
 4.1 Alignment using NGMLR
 
 ```
-ngmlr -x ont -t 8 -r ref.fa -q input.fastq -o output.sam
+ngmlr -x ont -t 24 -r ref.fa -q input.fastq -o output.sam
 ```
 
 4.2 SV detection with Sniffies
+```
+samtools sort -T output/tmp -o sorted.bam output.sam
+```
+
 
 ```
-./sniffles -m mapped.sort.bam -v output.vcf
+sniffles -m mapped.sort.bam -v output.vcf
 ```
+
+
 
 
 
